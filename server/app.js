@@ -10,7 +10,7 @@ const apiInit = require('./api/');
 const env = process.env;
 const session = require('express-session');
 const passport = require('passport');
-const auth0Strategy = require('passport-auth0');
+const Auth0Strategy = require('passport-auth0');
 
 var app = express();
 
@@ -21,11 +21,38 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+// Session
 app.use(session({
 	resave: true,
 	saveUninitialized: true,
 	secret: 'x3napoodoos'
 }));
+
+// Passport + Auth0
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(
+	new Auth0Strategy({
+		domain: process.env.AUTH0_DOMAIN,
+		clientID: process.env.AUTH0_CLIENT_ID,
+		clientSecret: process.env.AUTH0_CLIENT_SECRET,
+		callbackURL: process.env.AUTH0_CALLBACK_URL
+	}, (accessToken, refreshToken, extraParams, profile, done) => {
+		return done(null, profile);
+	})
+);
+passport.serializeUser((user, done) => {
+	done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+	done(null, user);
+});
+
+app.get('/auth', passport.authenticate('auth0'));
+
+app.get('/auth/callback', passport.authenticate('auth0', { successRedirect: `http://localhost:${process.env.PORT || 3000}/` }))
 
 // serve dev static files - use nginx for staging/prod
 if(process.env.NODE_ENV === 'development') {
