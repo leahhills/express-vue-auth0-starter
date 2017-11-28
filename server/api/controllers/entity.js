@@ -7,7 +7,7 @@ router.get('/', function(req, res, next) {
     name: 'Entity Name',
     details: 'I am some entity.'
   };
-  res.send(entity);
+  res.status(200).send(entity);
 });
 
 module.exports = router;

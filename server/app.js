@@ -6,16 +6,26 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const thoughtService = require('./service/');
+const apiInit = require('./api/');
 const env = process.env;
+const session = require('express-session');
+const passport = require('passport');
+const auth0Strategy = require('passport-auth0');
 
 var app = express();
+
+/* Middleware */
 
 app.use(cors());
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(session({
+	resave: true,
+	saveUninitialized: true,
+	secret: 'x3napoodoos'
+}));
 
 // serve dev static files - use nginx for staging/prod
 if(process.env.NODE_ENV === 'development') {
@@ -25,7 +35,17 @@ if(process.env.NODE_ENV === 'development') {
 	app.use(express.static(path.join(__dirname, '../public')));
 }
 
-thoughtService(app);
+app.use(session({
+	resave: true,
+	saveUninitialized: true,
+	secret: 'x3napoodoos'
+}));
+
+/* Api */
+
+apiInit(app);
+
+/* Error handling */
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
